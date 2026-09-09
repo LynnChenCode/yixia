@@ -40,24 +40,67 @@ Helsinki OPUS-MT（zh↔en，一对模型约 150 MB 磁盘）
 
 ---
 
-## 环境要求
+## 前置条件
 
-- Windows 10/11 x64（主要使用场景）或 Linux  
-- Python **3.10+**（推荐 3.12）  
-- 磁盘约 **500 MB**（venv + 两个模型）  
-- 第一次装模型需要联网（可用 Hugging Face 镜像）  
+跑翻译 API **必须**先具备这些，缺一不可。网页翻译页是额外可选的。
+
+### 必装（翻译 API）
+
+| 项 | 要求 | 说明 |
+| --- | --- | --- |
+| 系统 | Windows 10/11 **x64**，或 Linux | 主要使用场景是 Windows 办公机 |
+| Python | **3.10 或更高**（推荐 3.12 / 3.13） | [python.org](https://www.python.org/downloads/) 安装；Windows 务必勾选 **Add python.exe to PATH** |
+| PowerShell | 5.1 或更高 | Windows 10/11 自带，安装脚本依赖它 |
+| Git | 能执行 `git clone` | 用来拉取本仓库 |
+| 磁盘 | 约 **500 MB** 空闲 | `.venv` + 两个 OPUS-MT 模型（约 310 MB） |
+| 内存 | 建议 **1 GB** 以上空闲 | 运行时大约 400 MB |
+| 网络 | **仅第一次安装**需要 | 从 Hugging Face 下载模型；装好后可完全离线 |
+
+本机没有 Python 时，先装再继续。装完打开**新的** PowerShell 检查：
+
+```powershell
+py -3 --version
+# 若没有 py 启动器，再用：
+python --version
+```
+
+应看到 `Python 3.10` 或更高。若提示找不到命令，多半是没勾选 PATH，需要重装 Python 或手动把安装目录加进环境变量。
+
+指定某个 Python（本机有多个版本时）：
+
+```powershell
+$env:YIXIA_PYTHON = "py -3.12"
+```
+
+### 可选（网页翻译页）
+
+| 项 | 要求 | 说明 |
+| --- | --- | --- |
+| Node.js | **20+** | 只有要用自带网页 UI 时才需要；只当 API 给插件用则不用装 |
+
+```powershell
+node --version
+```
 
 ---
 
 ## Windows 安装
 
-在项目根目录执行：
+1. 确认上面的前置条件已满足。  
+2. 克隆仓库并进入目录：
+
+```powershell
+git clone https://github.com/LynnChenCode/yixia.git
+cd yixia
+```
+
+3. 执行安装脚本（创建虚拟环境、装依赖、下载模型）：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
 ```
 
-脚本会安装到：
+无论仓库克隆在哪，脚本都会安装到 **`D:\tools\yixia`**（若已经在该目录则原地安装）：
 
 ```
 D:\tools\yixia\
@@ -68,7 +111,15 @@ D:\tools\yixia\
   plugin-settings.txt     # 插件填写说明
 ```
 
-之后双击 **`D:\tools\yixia\start-yixia.cmd`**，保持窗口不要关。
+国内下载模型失败时，先设镜像再重新跑安装脚本：
+
+```powershell
+$env:HF_ENDPOINT = "https://hf-mirror.com"
+$env:HF_HUB_DISABLE_XET = "1"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup-windows.ps1
+```
+
+4. 双击 **`D:\tools\yixia\start-yixia.cmd`**，保持窗口不要关。
 
 - API：`http://127.0.0.1:18790/v1`  
 - 模型名：`yixia`  
@@ -76,17 +127,26 @@ D:\tools\yixia\
 
 任务管理器里进程名是 **`python.exe`**（路径在 `D:\tools\yixia\.venv\...`）。刚启动约 150–250 MB，翻过一段落后约 **400 MB**。
 
-### Linux / 开发机
+### 可选：网页 UI
 
-```bash
-chmod +x scripts/start-api.sh
-./scripts/start-api.sh
+需要先安装 Node.js 20+，再在项目目录执行：
+
+```powershell
+npm install
+npm run dev
 ```
 
-可选网页 UI：
+浏览器打开脚本提示的地址（默认 `http://127.0.0.1:43147`）。不装网页也不影响插件调用 API。
+
+### Linux / 开发机
+
+同样需要 **Python 3.10+**（以及 `python3-venv` / `pip`）。首次运行会建虚拟环境并下载模型：
 
 ```bash
-npm install && npm run dev
+git clone https://github.com/LynnChenCode/yixia.git
+cd yixia
+chmod +x scripts/start-api.sh
+./scripts/start-api.sh
 ```
 
 ---
@@ -164,6 +224,9 @@ A: `Python` / `python.exe`。CMD 窗口标题可能是 YiXia。
 
 **Q: 结果前面多出「请翻译为简化中文…」？**  
 A: 插件提示词被送进模型了。把 user 提示词改成 `$content`。
+
+**Q: 提示找不到 Python / `Python 3.10+ was not found`？**  
+A: 未安装，或安装时没勾选 **Add python.exe to PATH**。请安装 [Python 3.10+](https://www.python.org/downloads/)，勾选 PATH 后**新开**终端再跑安装脚本。多版本时可设 `$env:YIXIA_PYTHON = "py -3.12"`。
 
 **Q: 窗口一闪就关？**  
 A: 多半是 venv 或模型文件不完整。用管理员/普通 PowerShell 看报错；确认 `models\opus` 下两个目录都有 `model.bin` 等文件。
