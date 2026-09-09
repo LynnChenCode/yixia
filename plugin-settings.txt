@@ -1,0 +1,15 @@
+YiXia installed at D:\tools\yixia
+
+Double-click start-yixia.cmd to run. RAM ~400 MB.
+
+Immersive Translate / other plugins:
+  Type      OpenAI compatible
+  Base URL  http://127.0.0.1:18790/v1
+  Model     yixia
+  API Key   local (any value)
+  Target    Chinese or English only
+
+Optional web UI:
+  cd /d D:\tools\yixia
+  npm install
+  npm run dev
